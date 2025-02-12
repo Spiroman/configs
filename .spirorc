@@ -1,6 +1,6 @@
 # .spirorc
 # This file contains custom functions and aliases.
-# To load these functions in your shell, add the following line to your .bashrc or .zshrc file:
+# To load config in your shell, add the following line to your .bashrc or .zshrc file:
 # source ~/.spirorc
 
 
@@ -12,6 +12,7 @@
 ####                                                      ####
 ##############################################################
 
+# General
 mkcd() {
     # Creates a directory and navigates into it
     mkdir -p "$1" && cd "$1"
@@ -22,6 +23,58 @@ hsg() {
     history | grep "$*"
 }
 
+# Python
+venv() {
+    if [ ! -d ".venv" ]; then
+        python -m venv .venv
+    fi
+    source .venv/bin/activate
+}
+
+function ipython {
+    # Check if running in a virtual environment
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        # Path to IPython in the virtual environment
+        VENV_IPYTHON="$VIRTUAL_ENV/bin/ipython"
+
+        if [[ -x "$VENV_IPYTHON" ]]; then
+            # If IPython is installed in the virtual environment, run it
+            "$VENV_IPYTHON" "$@"
+            return
+        else
+            # IPython is not installed in the virtual environment
+            echo "IPython is not installed in the virtual environment ($VIRTUAL_ENV)."
+        fi
+    fi
+
+    # Run global IPython or fallback to system default
+    command ipython "$@"
+}
+
+# Git
+gd() {
+    if [ "$#" -eq 0 ]; then
+        git diff
+    else
+        git diff "$@"
+    fi
+}
+
+gcm() {
+    if git rev-parse --verify main &>/dev/null; then
+        git checkout main
+    elif git rev-parse --verify master &>/dev/null; then
+        git checkout master
+    else
+        echo "Neither 'main' nor 'master' branch exists."
+    fi
+}
+
+gsa() {
+  local stash_number=${1:-0}  # Default to 0 if no argument is provided
+  git stash apply "stash@{${stash_number}}"
+}
+
 ###################################################
 ####        _   _    ___   _   ___ ___ ___     ####
 ####       /_\ | |  |_ _| /_\ / __| __/ __|    ####
@@ -30,6 +83,21 @@ hsg() {
 ####                                           ####
 ###################################################
 
-alias edzrc='vim .zshrc'
-alias edsprc='vim .spirorc'
+# rc file aliases
+alias ezrc='vim ~/.zshrc'
+alias esrc='vim ~/.spirorc'
+alias evrc='vim ~/.vimrc'
+
+# misc
 alias bla='echo bla'
+
+# Git
+alias gc='git commit'
+alias gs='git status'
+alias gp='git push'
+alias gbl='git branch --list'
+alias gsw='git switch -'
+
+# Node
+alias nrs='npm run start'
+alias nrb='npm run build'
