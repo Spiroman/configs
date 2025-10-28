@@ -3,7 +3,6 @@
 # To load config in your shell, add the following line to your .bashrc or .zshrc file:
 # source ~/.spirorc
 
-
 ##############################################################
 ####      ___ _   _ _  _  ___ _____ ___ ___  _  _ ___     ####
 ####     | __| | | | \| |/ __|_   _|_ _/ _ \| \| / __|    ####
@@ -75,6 +74,45 @@ gsa() {
   git stash apply "stash@{${stash_number}}"
 }
 
+gmm() {
+	# Ensures your feature branch is up-to-date by pulling the latest changes from the repository’s primary branch.
+	# 1. Verifies you’re not currently on main or master (and aborts if you are).
+	# 2. Detects whether the repo uses “main” or “master” as its primary branch.
+	# 3. Checks out that primary branch and runs git pull to fetch and integrate remote changes.
+	# 4. Returns to your original branch and merges in the updated primary branch.
+    # figure out what branch we’re on now
+    local current_branch
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+    # refuse to run on main/master
+    if [[ "$current_branch" == "main" || "$current_branch" == "master" ]]; then
+        echo "Error: you are on '$current_branch'. This cannot be run on main/master."
+        return 1
+    fi
+
+    # detect which primary branch exists
+    local main_branch
+    if git show-ref --verify --quiet refs/heads/main; then
+        main_branch=main
+    elif git show-ref --verify --quiet refs/heads/master; then
+        main_branch=master
+    else
+        echo "Error: neither 'main' nor 'master' branch exists."
+        return 1
+    fi
+
+    # switch, pull, switch back, merge
+    git checkout "$main_branch"      || return 1
+    git pull                         || return 1
+    git checkout "$current_branch"   || return 1
+    git merge "$main_branch"
+}
+
+gce() {
+	git commit --allow-empty -m "Empty commit"
+	git push
+}
+
 ###################################################
 ####        _   _    ___   _   ___ ___ ___     ####
 ####       /_\ | |  |_ _| /_\ / __| __/ __|    ####
@@ -95,8 +133,13 @@ alias bla='echo bla'
 alias gc='git commit'
 alias gs='git status'
 alias gp='git push'
+alias gl='git log'
 alias gbl='git branch --list'
 alias gsw='git switch -'
+alias gca='git commit --amend -m'
+alias gpfl='git push --force-with-lease'
+alias gst='git stash'
+alias gaac='git add . && git commit'
 
 # Node
 alias nrs='npm run start'
